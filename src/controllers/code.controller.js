@@ -1,23 +1,47 @@
-import { submitCode } from "../services/judge0.service.js";
-import {pollJudge0Result} from '../utils/pollJudge0.js';
+import { runTestCases } from "../services/testCaseRunner.service.js";
+import { pollJudge0Result } from '../utils/pollJudge0.js';
+import { getSubmissions } from "../services/submissionQuery.service.js";
+import {getProblemById} from '../services/problem.service.js'
+import {saveSubmission} from '../services/submission.service.js'
 
 const submitCodeController = async (req, res) => {
-    const { source_code, language_id, stdin } = req.body;
+    const { source_code, language_id, problemId } = req.body;
+
+    if (!problemId) {
+        return res.status(400).json({ error: "Problem ID is required" });
+    }
+
+    const problem = getProblemById(problemId);
+
+    if (!problem) {
+        return res.status(404).json({ error: "Problem not found" });
+    }
 
     try {
-        const result = await submitCode({
+        const result = await runTestCases({
             source_code,
             language_id,
-            stdin
+            testCases: problem.testCases
         });
 
-        return res.status(201).json({
-            token: result.token
+        await saveSubmission({
+            problemId: problem.id,
+            languageId: language_id,
+            verdict: result.verdict,
+            failedTestCase: result.testCase || null,
+            executionTime: result.executionTime || null,
+            memory: result.memory || null
+        });
+
+        return res.json({
+            problemId: problem.id,
+            verdict: result.verdict,
+            failedTestCase: result.testCase || null
         });
     } catch (error) {
-        console.log(error);
+        console.error("Error in submitCodeController: ", error);
         return res.status(500).json({
-            error: "Code submission failed"
+            error: "Execution failed"
         });
     }
 }
@@ -47,7 +71,28 @@ const getResultController = async (req, res) => {
     }
 }
 
+const getSubmissionsController = async (req, res) => {
+    const { problemId, limit } = req.query;
+
+    // Limit protection
+    const safeLimit = Math.min(Number(limit) || 10, 50);
+
+    try {
+        const submissions = await getSubmissions({
+            problemId,
+            limit: safeLimit
+        });
+
+        return res.json(submissions);
+    } catch (error) {
+        return res.status(500).json({
+            error: "Failed to fetch submissions"
+        });
+    }
+}
+
 export {
     submitCodeController,
-    getResultController
+    getResultController,
+    getSubmissionsController
 }
