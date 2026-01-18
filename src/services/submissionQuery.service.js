@@ -18,3 +18,18 @@ export async function getSubmissions({
         )
         .lean();
 }
+
+export async function getUserSubmissions({
+    userId,
+    problemId,
+    limit = 10
+}) {
+    const query = { userId };
+
+    if (problemId) query.problemId = problemId;
+
+    return Submission.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+}

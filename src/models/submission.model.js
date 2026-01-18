@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 
 const submissionSchema = new mongoose.Schema(
     {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true
+        },
+
         problemId: {
             type: String,
             required: true,
@@ -23,19 +30,10 @@ const submissionSchema = new mongoose.Schema(
             default: null
         },
 
-        executionTime: {
-            type: String,
-            default: null
-        },
-
-        memory: {
-            type: Number,
-            default: null
-        }
+        executionTime: String,
+        memory: Number
     },
-    {
-        timestamps: true
-    }
+    { timestamps: true }
 );
 
 export const Submission = mongoose.model(

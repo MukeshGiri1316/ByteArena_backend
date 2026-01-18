@@ -1,8 +1,8 @@
 import { runTestCases } from "../services/testCaseRunner.service.js";
 import { pollJudge0Result } from '../utils/pollJudge0.js';
 import { getSubmissions } from "../services/submissionQuery.service.js";
-import {getProblemById} from '../services/problem.service.js'
-import {saveSubmission} from '../services/submission.service.js'
+import { getProblemById } from '../services/problem.service.js'
+import { saveSubmission } from '../services/submission.service.js'
 
 const submitCodeController = async (req, res) => {
     const { source_code, language_id, problemId } = req.body;
@@ -25,12 +25,13 @@ const submitCodeController = async (req, res) => {
         });
 
         await saveSubmission({
+            userId: req.user.id,
             problemId: problem.id,
             languageId: language_id,
             verdict: result.verdict,
             failedTestCase: result.testCase || null,
-            executionTime: result.executionTime || null,
-            memory: result.memory || null
+            executionTime: result.executionTime,
+            memory: result.memory
         });
 
         return res.json({
