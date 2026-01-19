@@ -1,6 +1,7 @@
 import { Submission } from "../models/submission.model.js";
 
 export async function saveSubmission({
+    userId,
     problemId,
     languageId,
     verdict,
@@ -9,6 +10,7 @@ export async function saveSubmission({
     memory
 }) {
     return Submission.create({
+        userId,
         problemId,
         languageId,
         verdict,

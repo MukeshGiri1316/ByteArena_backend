@@ -3,9 +3,11 @@ import { pollJudge0Result } from '../utils/pollJudge0.js';
 import { getSubmissions } from "../services/submissionQuery.service.js";
 import { getProblemById } from '../services/problem.service.js'
 import { saveSubmission } from '../services/submission.service.js'
+import { LanguageTemplate } from "../models/languageTemplate.model.js";
 
 const submitCodeController = async (req, res) => {
-    const { source_code, language_id, problemId } = req.body;
+    const userId = req.user.id;
+    const { sourceCode, languageId, problemId } = req.body;
 
     if (!problemId) {
         return res.status(400).json({ error: "Problem ID is required" });
@@ -17,17 +19,29 @@ const submitCodeController = async (req, res) => {
         return res.status(404).json({ error: "Problem not found" });
     }
 
+    const template = await LanguageTemplate.findOne({ languageId });
+    if (!template) {
+        return res.status(400).json({ message: "Language not supported" });
+    }
+
+    const finalCode = injectCode(template.template, sourceCode);
+
+    const testCases = [
+        ...problem.publicTestCases,
+        ...problem.hiddenTestCases
+    ];
+
     try {
         const result = await runTestCases({
-            source_code,
-            language_id,
-            testCases: problem.testCases
+            source_code: finalCode,
+            language_id: languageId,
+            testCases: testCases
         });
 
         await saveSubmission({
-            userId: req.user.id,
+            userId: userId,
             problemId: problem.id,
-            languageId: language_id,
+            languageId: languageId,
             verdict: result.verdict,
             failedTestCase: result.testCase || null,
             executionTime: result.executionTime,
