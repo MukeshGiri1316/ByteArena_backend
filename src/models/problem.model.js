@@ -22,7 +22,7 @@ const problemSchema = new mongoose.Schema(
             index: true
         },
 
-        description: {
+        descriptionMarkdown: {
             type: String,
             required: true
         },
@@ -45,10 +45,9 @@ const problemSchema = new mongoose.Schema(
 
         hiddenTestCases: [testCaseSchema],
 
-        boilerplate: {
-            cpp: String,
-            python: String,
-            java: String
+        ioFormat: {
+            input: String,
+            output: String
         },
 
         timeLimit: {
