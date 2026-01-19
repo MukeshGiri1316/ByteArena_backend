@@ -10,8 +10,16 @@ const submissionSchema = new mongoose.Schema(
         },
 
         problemId: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Problem",
             required: true,
+            index: true
+        },
+
+        contestId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Contest",
+            default: null,
             index: true
         },
 
@@ -22,7 +30,15 @@ const submissionSchema = new mongoose.Schema(
 
         verdict: {
             type: String,
-            required: true
+            enum: [
+                "Accepted",
+                "Wrong Answer",
+                "Time Limit Exceeded",
+                "Runtime Error",
+                "Compilation Error"
+            ],
+            required: true,
+            index: true
         },
 
         failedTestCase: {
@@ -30,8 +46,14 @@ const submissionSchema = new mongoose.Schema(
             default: null
         },
 
-        executionTime: String,
-        memory: Number
+        executionTime: Number,
+        memory: Number,
+
+        isContestSubmission: {
+            type: Boolean,
+            default: false,
+            index: true
+        }
     },
     { timestamps: true }
 );
