@@ -2,8 +2,29 @@ import mongoose from "mongoose";
 
 const testCaseSchema = new mongoose.Schema(
     {
-        input: String,
-        output: String
+        input: {
+            type: String, // JSON string
+            required: true
+        },
+        output: {
+            type: String, // JSON string
+            required: true
+        }
+    },
+    { _id: false }
+);
+
+
+const functionParamSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true
+        },
+        type: {
+            type: String,
+            required: true // e.g. int, vector<int>, List[int]
+        }
     },
     { _id: false }
 );
@@ -41,8 +62,21 @@ const problemSchema = new mongoose.Schema(
 
         constraints: String,
 
-        publicTestCases: [testCaseSchema],
+        solutionType: {
+            type: String,
+            enum: ["STDIN", "FUNCTION"],
+            default: "FUNCTION",
+            index: true
+        },
 
+        /* 🔑 FUNCTION-STYLE METADATA */
+        functionSignature: {
+            functionName: String,
+            returnType: String,
+            parameters: [functionParamSchema]
+        },
+
+        publicTestCases: [testCaseSchema],
         hiddenTestCases: [testCaseSchema],
 
         ioFormat: {
@@ -57,7 +91,7 @@ const problemSchema = new mongoose.Schema(
 
         memoryLimit: {
             type: Number,
-            default: 262144 // 256MB
+            default: 262144
         },
 
         createdBy: {
