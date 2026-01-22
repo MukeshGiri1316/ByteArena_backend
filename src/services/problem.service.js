@@ -1,5 +1,5 @@
-import { problems } from "../data/problems.js";
+import { Problem } from "../models/problem.model.js";
 
-export function getProblemById(problemId) {
-    return problems[problemId] || null;
+export async function getProblemById(problemId) {
+    return await Problem.findById(problemId);
 }

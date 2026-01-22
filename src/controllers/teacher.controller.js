@@ -1,12 +1,12 @@
 import { Problem } from "../models/problem.model.js";
+import { sendError } from "../utils/error.js";
+import { sendResponse } from "../utils/response.js";
 
 export async function createProblem(req, res) {
     try {
         // Ensure authenticated user exists
         if (!req.user || !req.user.id) {
-            return res.status(401).json({
-                message: "Unauthorized access"
-            });
+            return sendError(res, 401, "Unauthorized access");
         }
 
         const teacherId = req.user.id;
@@ -22,22 +22,25 @@ export async function createProblem(req, res) {
             publicTestCases,
             hiddenTestCases,
             timeLimit,
-            memoryLimit
+            memoryLimit,
+            functionSignature // New field for LeetCode-style execution
         } = req.body;
 
         // Basic validation
-        if (!title || !slug || !descriptionMarkdown || !difficulty) {
-            return res.status(400).json({
-                message: "Missing required fields"
-            });
+        if (!title || !slug || !descriptionMarkdown || !difficulty || !functionSignature) {
+            return sendError(res, 400, "Missing required fields");
+        }
+
+        // Validate functionSignature structure
+        const { functionName, returnType, parameters } = functionSignature;
+        if (!functionName || !returnType || !Array.isArray(parameters)) {
+            return sendError(res, 400, "Invalid functionSignature format");
         }
 
         // Check for existing problem with same slug
         const existing = await Problem.findOne({ slug });
         if (existing) {
-            return res.status(409).json({
-                message: "Problem with this slug already exists"
-            });
+            return sendError(res, 409, "Problem with this slug already exists");
         }
 
         // Create problem
@@ -53,11 +56,11 @@ export async function createProblem(req, res) {
             hiddenTestCases,
             timeLimit,
             memoryLimit,
+            functionSignature, // Store it in DB
             createdBy: teacherId
         });
 
-        return res.status(201).json({
-            message: "Problem created successfully",
+        return sendResponse(res, 201, "Problem created successfully", {
             problemId: problem._id
         });
 
@@ -66,14 +69,11 @@ export async function createProblem(req, res) {
 
         // Handle MongoDB duplicate key error (extra safety)
         if (error.code === 11000) {
-            return res.status(409).json({
-                message: "Duplicate field value detected",
+            return sendError(res, 409, "Duplicate field value detected", {
                 field: Object.keys(error.keyValue)
             });
         }
 
-        return res.status(500).json({
-            message: "Internal server error"
-        });
+        return sendError(res, 500, "Internal server error");
     }
 }

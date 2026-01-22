@@ -4,62 +4,65 @@ import { getSubmissions } from "../services/submissionQuery.service.js";
 import { getProblemById } from '../services/problem.service.js'
 import { saveSubmission } from '../services/submission.service.js'
 import { LanguageTemplate } from "../models/languageTemplate.model.js";
+import { sendResponse } from '../utils/response.js';
+import { sendError } from '../utils/error.js';
 
 const submitCodeController = async (req, res) => {
     const userId = req.user.id;
     const { sourceCode, languageId, problemId } = req.body;
 
     if (!problemId) {
-        return res.status(400).json({ error: "Problem ID is required" });
+        return sendError(res, 400, "Problem ID is required");
     }
 
-    const problem = getProblemById(problemId);
+    const problem = await getProblemById(problemId);
 
     if (!problem) {
-        return res.status(404).json({ error: "Problem not found" });
+        return sendError(res, 404, "Problem not found");
     }
 
-    const template = await LanguageTemplate.findOne({ languageId });
-    if (!template) {
-        return res.status(400).json({ message: "Language not supported" });
+    const templateDoc = await LanguageTemplate.findOne({ languageId });
+    if (!templateDoc) {
+        return sendError(res, 400, "Language not supported");
     }
-
-    const finalCode = injectCode(template.template, sourceCode);
 
     const testCases = [
         ...problem.publicTestCases,
         ...problem.hiddenTestCases
     ];
 
+    // console.log(problem);
+
+    // return res.status(200).json({message: "done"});
+
     try {
         const result = await runTestCases({
-            source_code: finalCode,
-            language_id: languageId,
-            testCases: testCases
+            template: templateDoc.template,       // template from DB
+            studentCode: sourceCode,              // student function code
+            language_id: languageId,              // Judge0 language ID
+            testCases,                             // array of test cases
+            functionSignature: problem.functionSignature // must be added in problem model
         });
 
         await saveSubmission({
-            userId: userId,
+            userId,
             problemId: problem.id,
-            languageId: languageId,
+            languageId,
             verdict: result.verdict,
             failedTestCase: result.testCase || null,
             executionTime: result.executionTime,
             memory: result.memory
         });
 
-        return res.json({
-            problemId: problem.id,
+        return sendResponse(res, 200, {
             verdict: result.verdict,
             failedTestCase: result.testCase || null
         });
     } catch (error) {
         console.error("Error in submitCodeController: ", error);
-        return res.status(500).json({
-            error: "Execution failed"
-        });
+        return sendError(res, 500, "Execution failed");
     }
-}
+};
 
 const getResultController = async (req, res) => {
     const { token } = req.params;

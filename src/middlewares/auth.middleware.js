@@ -1,12 +1,13 @@
 import { verifyToken } from "../utils/jwt.js";
 import { User } from "../models/user.model.js";
+import {sendError} from '../utils/error.js';
 
 export async function authenticate(req, res, next) {
     try {
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).json({ message: "Unauthorized" });
+            return sendError(res, 401, "Authorization header missing or malformed");
         }
 
         const token = authHeader.split(" ")[1];
@@ -18,7 +19,7 @@ export async function authenticate(req, res, next) {
         );
 
         if (!user || !user.isActive) {
-            return res.status(401).json({ message: "Account disabled" });
+            return sendError(res, 401, "Account disabled");
         }
 
         req.user = {
@@ -28,6 +29,6 @@ export async function authenticate(req, res, next) {
 
         next();
     } catch (err) {
-        return res.status(401).json({ message: "Invalid or expired token" });
+        return sendError(res, 401, "Invalid or expired token");
     }
 }

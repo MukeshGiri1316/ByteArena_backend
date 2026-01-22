@@ -5,6 +5,6 @@ import { authorize } from '../middlewares/role.middleware.js';
 
 const router = Router();
 
-router.post("createProblem", authenticate, authorize("TEACHER"), createProblem);
+router.post("/create-problem", authenticate, authorize("TEACHER"), createProblem);
 
 export default router;
