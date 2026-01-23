@@ -77,3 +77,148 @@ export async function createProblem(req, res) {
         return sendError(res, 500, "Internal server error");
     }
 }
+
+export async function updateProblem(req, res) {
+    const ALLOWED_FIELDS = [
+        "title",
+        "slug",
+        "descriptionMarkdown",
+        "difficulty",
+        "tags",
+        "constraints",
+        "solutionType",
+        "functionSignature",
+        "publicTestCases",
+        "hiddenTestCases",
+        "ioFormat",
+        "timeLimit",
+        "memoryLimit",
+        "isActive"
+    ];
+
+    try {
+        const { problemId } = req.params;
+        const payload = req.body;
+
+        if (!payload || Object.keys(payload).length === 0) {
+            return sendError(res, 400, "No data provided for update");
+        }
+
+        // 🔐 Build safe update object
+        const updates = {};
+        for (const key of Object.keys(payload)) {
+            if (ALLOWED_FIELDS.includes(key)) {
+                updates[key] = payload[key];
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return sendError(res, 400, "No valid fields provided for update");
+        }
+
+        const updatedProblem = await Problem.findByIdAndUpdate(
+            problemId,
+            { $set: updates },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        if (!updatedProblem) {
+            return sendError(res, 404, "Problem not found");
+        }
+
+        return sendResponse(res, 200, "Problem updated successfully");
+
+    } catch (error) {
+        console.error(error);
+        return sendError(res, 500, "Internal server error");
+    }
+}
+
+export async function deleteProblem(req, res) {
+    try {
+        const { problemId } = req.params;
+        const problem = await Problem.findByIdAndDelete(problemId);
+
+        if (!problem) {
+            return sendError(res, 404, "Problem not found");
+        }
+
+        return sendResponse(res, 200, "Problem deleted successfully");
+    } catch (error) {
+        return sendError(res, 500, "Internal server error");
+    }
+}
+
+export async function getProblems(req, res) {
+    try {
+        const teacherId = req.user.id;
+
+        // Pagination
+        const page = Math.max(parseInt(req.query.page) || 1, 1);
+        const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+        const skip = (page - 1) * limit;
+
+        // Filters
+        const {
+            search,
+            difficulty,
+            tags,
+            isActive
+        } = req.query;
+
+        // 🔍 Build query
+        const query = {
+            createdBy: teacherId
+        };
+
+        // Search by title (case-insensitive)
+        if (search) {
+            query.title = { $regex: search, $options: "i" };
+        }
+
+        // Difficulty filter
+        if (difficulty) {
+            query.difficulty = difficulty;
+        }
+
+        // isActive filter
+        if (typeof isActive !== "undefined") {
+            query.isActive = isActive === "true";
+        }
+
+        // Tags filter (any match)
+        if (tags) {
+            const tagArray = tags.split(",").map(t => t.trim());
+            query.tags = { $in: tagArray };
+        }
+
+        // Fetch data
+        const [problems, total] = await Promise.all([
+            Problem.find(query)
+                .select()
+                .sort({ updatedAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+
+            Problem.countDocuments(query)
+        ]);
+
+        return sendResponse(res, 200, "Problems fetched successfully", {
+            problems,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        })
+
+    } catch (error) {
+        console.error("Get Teacher Problems Error:", error);
+        return sendError(res, 500, "Internal server error");
+    }
+}
