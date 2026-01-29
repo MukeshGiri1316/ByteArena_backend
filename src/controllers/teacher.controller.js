@@ -1,4 +1,4 @@
-import { Problem } from "../models/problem.model.js";
+import { getProblems } from '../services/problem.service.js';
 import { sendError } from "../utils/error.js";
 import { sendResponse } from "../utils/response.js";
 
@@ -152,14 +152,13 @@ export async function deleteProblem(req, res) {
     }
 }
 
-export async function getProblems(req, res) {
+export async function getProblemsByteacherId(req, res) {
     try {
         const teacherId = req.user.id;
 
         // Pagination
         const page = Math.max(parseInt(req.query.page) || 1, 1);
         const limit = Math.min(parseInt(req.query.limit) || 10, 50);
-        const skip = (page - 1) * limit;
 
         // Filters
         const {
@@ -196,16 +195,7 @@ export async function getProblems(req, res) {
         }
 
         // Fetch data
-        const [problems, total] = await Promise.all([
-            Problem.find(query)
-                .select()
-                .sort({ updatedAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-
-            Problem.countDocuments(query)
-        ]);
+        const { problems, total } = await getProblems(query, page, limit);
 
         return sendResponse(res, 200, "Problems fetched successfully", {
             problems,

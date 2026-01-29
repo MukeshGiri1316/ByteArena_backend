@@ -7,6 +7,7 @@ export const CPP_TYPE_MAP = {
     string: "string",
 
     "int[]": "vector<int>",
+    "char[]": "vector<char>",
     "string[]": "vector<string>",
     "bool[]": "vector<bool>",
 

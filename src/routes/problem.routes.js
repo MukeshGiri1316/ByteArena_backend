@@ -1,12 +1,9 @@
 import { Router } from "express";
-import {
-    listProblems,
-    getProblemBySlug
-} from "../controllers/problem.controller.js";
+import { getProblemsController, getProblemByIdController } from "../controllers/problem.controller.js";
 
 const router = Router();
 
-router.get("/problems", listProblems);
-router.get("/problems/:slug", getProblemBySlug);
+router.get("/get-problems", getProblemsController);
+router.get("/get-problem/:problemId", getProblemByIdController);
 
 export default router;
