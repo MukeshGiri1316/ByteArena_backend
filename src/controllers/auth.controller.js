@@ -1,10 +1,15 @@
+import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import {User} from "../models/user.model.js";
+import { User } from "../models/user.model.js";
 import { signToken } from "../utils/jwt.js";
 import { sendResponse } from "../utils/response.js";
 import { sendError } from "../utils/error.js";
+import { saveUserStat } from '../services/user.service.js';
 
 export const registerUser = async (req, res) => {
+    const session = await mongoose.startSession();
+
+    session.startTransaction();
     try {
         const { username, email, password } = req.body;
 
@@ -19,24 +24,38 @@ export const registerUser = async (req, res) => {
 
         const passwordHash = await bcrypt.hash(password, 10);
 
-        const user = await User.create({
+        const newUser = new User({
             username,
             email,
             role: "USER",
             passwordHash,
         });
 
+        const user = await newUser.save({ session });
+
         const payload = {
             userId: user._id,
             role: user.role,
         };
 
-        return sendResponse(res, 201, "User registered successfully", {
-            token: signToken(payload),
-        });
+        // initiate user stats
+        await saveUserStat(user._id, {}, session);
+
+        await session.commitTransaction();
+
+        const token = signToken(payload);
+        res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        })
+
+        return sendResponse(res, 201, "User registered successfully");
     } catch (error) {
+        await session.abortTransaction();
         console.error("Register error:", error);
         return sendError(res, 500, "Internal server error");
+    } finally {
+        await session.endSession();
     }
 };
 
@@ -63,11 +82,20 @@ export const loginUser = async (req, res) => {
             role: user.role,
         };
 
-        return sendResponse(res, 200, "Login successful", {
-            token: signToken(payload),
-        });
+        const token = signToken(payload);
+        res.cookie("token", token, {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        })
+
+        return sendResponse(res, 200, "Login successful");
     } catch (error) {
         console.error("Login error:", error);
         return sendError(res, 500, "Internal server error");
     }
 };
+
+export async function logoutUser(req, res) {
+    res.clearCookie("token");
+    return sendResponse(res, 200, "Logout successful");
+}

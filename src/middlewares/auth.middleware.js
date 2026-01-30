@@ -4,16 +4,13 @@ import {sendError} from '../utils/error.js';
 
 export async function authenticate(req, res, next) {
     try {
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return sendError(res, 401, "Authorization header missing or malformed");
+        const token = req.headers.authorization?.split(" ")[1] || req.cookies?.token;
+        
+        if (!token) {
+            return sendError(res, 401, "Authorization token missing");
         }
 
-        const token = authHeader.split(" ")[1];
-
         const decoded = verifyToken(token);
-
         const user = await User.findById(decoded.userId).select(
             "_id role isActive"
         );
