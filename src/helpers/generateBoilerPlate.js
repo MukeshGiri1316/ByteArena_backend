@@ -22,7 +22,7 @@ export function generatePythonBoilerplate(functionSignature) {
         .map((param) => param.name)
         .join(", ");
 
-    const boilerplate = `def ${functionName}(${params}):
+    const boilerplate = `def ${functionName}(self, ${params}):
     # Code here
     pass`;
 

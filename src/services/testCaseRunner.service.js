@@ -1,11 +1,11 @@
 import { submitCode } from "./judge0.service.js";
 import { pollJudge0Result } from "../utils/pollJudge0.js";
 import { isOutputCorrect } from "../utils/compareOutput.js";
-import { VERDICTS } from "../utils/verdicts.js";
+import { VERDICTS } from "../constants/verdicts.js";
 import { injectCode } from "../utils/codeInjector.js";
 import { generateCppExecutionCode } from '../executors/cppExecution.js'
 import { generatePythonExecutionCode } from '../executors/pythonExecution.js'
-import {decodeBase64} from '../utils/decodeBase64.js'
+import { decodeBase64 } from '../utils/decodeBase64.js'
 
 /**
  * Runs test cases for LeetCode-style problems
@@ -16,6 +16,7 @@ import {decodeBase64} from '../utils/decodeBase64.js'
  * @param {object} functionSignature - { functionName, returnType, params }
  * @returns {object} verdict info
  */
+
 export async function runTestCases({
     template,
     studentCode,
@@ -23,6 +24,10 @@ export async function runTestCases({
     testCases,
     functionSignature
 }) {
+
+    let final_time = 0;
+    let final_memory = 0;
+
     for (let i = 0; i < testCases.length; i++) {
         const inputObj = JSON.parse(testCases[i].input);
         const expectedOutput = JSON.parse(testCases[i].output);
@@ -55,7 +60,7 @@ export async function runTestCases({
         const stdout = decodeBase64(result.stdout);
         const stderr = decodeBase64(result.stderr);
         const compileOutput = decodeBase64(result.compile_output);
-        console.log(stderr);
+        // console.log(stderr);
 
         // 5️⃣ Handle compilation/runtime errors
         if (compileOutput) {
@@ -71,14 +76,20 @@ export async function runTestCases({
             };
         }
 
+        // get worst case time and space for fair judgement
+        final_time = Math.max(final_time, Number(result.time) * 1000);
+        final_memory = ((Math.max(final_time, Number(result.memory))) / 1024).toFixed(3);
+
         // 6️⃣ Compare output
-        const isCorrect = isOutputCorrect(stdout, expectedOutput);
+        const { isCorrect, actual, expected } = isOutputCorrect(stdout, expectedOutput);
         if (!isCorrect) {
             return {
                 verdict: VERDICTS.WRONG_ANSWER,
+                actualOutput: actual,
+                expectedOutput: expected,
                 testCase: i + 1,
-                executionTime: result.time,
-                memory: result.memory
+                executionTime: final_time,
+                memory: parseFloat(final_memory)
             };
         }
     }
@@ -86,7 +97,7 @@ export async function runTestCases({
     // 7️⃣ All test cases passed
     return {
         verdict: VERDICTS.ACCEPTED,
-        executionTime: testCases.length ? undefined : 0,
-        memory: testCases.length ? undefined : 0
+        executionTime: final_time,
+        memory: parseFloat(final_memory)
     };
 }

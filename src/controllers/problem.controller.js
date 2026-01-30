@@ -52,7 +52,7 @@ export async function getCategoriesController(req, res) {
 export async function getProblemByIdController(req, res) {
     try {
         const { problemId } = req.params;
-        const defaultLanguage = 71; // get prefered language afterwards
+        const defaultLanguage = 54; // get prefered language afterwards
 
         if (!problemId) {
             return sendError(res, 400, "Problem Id is missing");

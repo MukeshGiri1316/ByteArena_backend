@@ -15,9 +15,8 @@ export async function getProblems(query, page = 1, limit = 10, selectFields = ""
     return { problems, total };
 }
 
-
 export async function getProblemById(problemId) {
-    const problem = await Problem.findById(problemId).select("-solutionType -hiddenTestCases -ioFormat -timeLimit -memoryLimit -isActive -createdBy -createdAt -updatedAt -__v");
+    const problem = await Problem.findById(problemId).select("-solutionType -ioFormat -isActive -createdBy -createdAt -updatedAt -__v");
 
-    return {problem};
+    return { problem };
 }

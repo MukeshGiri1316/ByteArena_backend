@@ -17,14 +17,21 @@ export function isOutputCorrect(actual, expected) {
     const normActual = normalizeOutput(actual);
     const normExpected = normalizeOutput(expected);
 
-    console.log("Normalized Actual:", normActual);
-    console.log("Normalized Expected:", normExpected);
-
     if (normActual.length !== normExpected.length) return false;
 
     for (let i = 0; i < normActual.length; i++) {
-        if (normActual[i] !== normExpected[i]) return false;
+        if (normActual[i] !== normExpected[i]) {
+            return {
+                isCorrect: false,
+                expected: normExpected,
+                actual: normActual
+            }
+        };
     }
 
-    return true;
+    return {
+        isCorrect: true,
+        expectedOutput: normExpected,
+        actualOutput: normActual
+    };
 }
