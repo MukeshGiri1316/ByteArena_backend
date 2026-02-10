@@ -4,16 +4,16 @@ import { User } from "../models/user.model.js";
 import { signToken } from "../utils/jwt.js";
 import { sendResponse } from "../utils/response.js";
 import { sendError } from "../utils/error.js";
-import { saveUserStat } from '../services/user.service.js';
+import { createUserProfile } from '../services/user.service.js';
 
 export const registerUser = async (req, res) => {
     const session = await mongoose.startSession();
 
     session.startTransaction();
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, profile_details } = req.body;
 
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !profile_details) {
             return sendError(res, 400, "All fields are required");
         }
 
@@ -39,7 +39,9 @@ export const registerUser = async (req, res) => {
         };
 
         // initiate user stats
-        await saveUserStat(user._id, {}, session);
+        profile_details.email = email;
+        profile_details.userId = user._id;
+        await createUserProfile(profile_details, session);
 
         await session.commitTransaction();
 
@@ -69,12 +71,12 @@ export const loginUser = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            return sendError(res, 401, "Invalid credentials");
+            return sendError(res, 404, "User not found");
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
         if (!isPasswordValid) {
-            return sendError(res, 401, "Invalid credentials");
+            return sendError(res, 401, "Wrong password");
         }
 
         const payload = {
@@ -94,6 +96,10 @@ export const loginUser = async (req, res) => {
         return sendError(res, 500, "Internal server error");
     }
 };
+
+export async function isMe(req, res) {
+    return sendResponse(res, 200, "User Logged in");
+}
 
 export async function logoutUser(req, res) {
     res.clearCookie("token");
