@@ -5,11 +5,16 @@ const contestProblemSchema = new mongoose.Schema(
         problemId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Problem",
-            required: true
+            required: true,
         },
         points: {
             type: Number,
-            required: true
+            required: true,
+            min: 0,
+        },
+        order: {
+            type: Number,
+            required: true, // problem sequence in contest
         }
     },
     { _id: false }
@@ -17,39 +22,97 @@ const contestProblemSchema = new mongoose.Schema(
 
 const contestSchema = new mongoose.Schema(
     {
+        /* -------------------- Basic Info -------------------- */
         title: {
             type: String,
-            required: true
+            required: true,
+            index: true,
         },
 
-        description: String,
+        description: {
+            type: String,
+            default: "",
+        },
 
+        contestType: {
+            type: String,
+            enum: ["PRACTICE", "RATED", "ICPC"],
+            default: "RATED",
+            index: true,
+        },
+
+        /* -------------------- Time Control -------------------- */
         startTime: {
             type: Date,
             required: true,
-            index: true
+            index: true,
         },
 
         endTime: {
             type: Date,
             required: true,
-            index: true
+            index: true,
         },
 
-        problems: [contestProblemSchema],
+        freezeTime: {
+            type: Date,
+            default: null, // rankings freeze after this
+        },
 
+        /* -------------------- Problems -------------------- */
+        problems: {
+            type: [contestProblemSchema],
+            required: true,
+        },
+
+        /* -------------------- Rules -------------------- */
+        penaltyPerWrongSubmission: {
+            type: Number,
+            default: 20, // minutes (ICPC style)
+        },
+
+        requiresRegistration: {
+            type: Boolean,
+            default: false,
+        },
+
+        /* -------------------- Visibility & State -------------------- */
+        status: {
+            type: String,
+            enum: ["DRAFT", "UPCOMING", "RUNNING", "FINISHED"],
+            default: "DRAFT",
+            index: true,
+        },
+
+        isRated: {
+            type: Boolean,
+            default: true,
+            index: true,
+        },
+
+        eligibilityEnabled: {
+            type: Boolean,
+            default: false,
+        },
+
+        /* -------------------- Ownership -------------------- */
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true,
         },
 
         isActive: {
             type: Boolean,
-            default: true
-        }
+            default: true,
+        },
     },
     { timestamps: true }
 );
+
+/* -------------------- Indexes -------------------- */
+contestSchema.index({ startTime: 1, endTime: 1 });
+contestSchema.index({ status: 1 });
 
 export const Contest = mongoose.model("Contest", contestSchema);

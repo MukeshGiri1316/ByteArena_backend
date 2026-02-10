@@ -2,63 +2,165 @@ import mongoose from "mongoose";
 
 const submissionSchema = new mongoose.Schema(
     {
+        /* -------------------- Core Relations -------------------- */
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
-            index: true
+            index: true,
         },
 
         problemId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Problem",
             required: true,
-            index: true
+            index: true,
         },
 
         contestId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Contest",
             default: null,
-            index: true
+            index: true,
         },
 
+        /* -------------------- Submission Details -------------------- */
         languageId: {
             type: Number,
-            required: true
+            required: true,
+            index: true,
         },
 
+        code: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "SubmissionCode",
+            required: true,
+        },
+
+        /* -------------------- Judge Result -------------------- */
         verdict: {
             type: String,
             enum: [
-                "Accepted",
-                "Wrong Answer",
-                "Time Limit Exceeded",
-                "Runtime Error",
-                "Compilation Error"
+                "PENDING",
+                "ACCEPTED",
+                "WRONG_ANSWER",
+                "TIME_LIMIT_EXCEEDED",
+                "MEMORY_LIMIT_EXCEEDED",
+                "RUNTIME_ERROR",
+                "COMPILATION_ERROR",
+                "PARTIAL_ACCEPTED",
             ],
-            required: true,
-            index: true
+            default: "PENDING",
+            index: true,
         },
 
-        failedTestCase: {
+        executionTime: {
+            type: Number, // milliseconds
+            default: null,
+        },
+
+        memoryUsed: {
+            type: Number, // KB
+            default: null,
+        },
+
+        score: {
             type: Number,
-            default: null
+            default: 0, // useful for partial / contest problems
         },
 
-        executionTime: Number,
-        memory: Number,
+        /* -------------------- Testcase Tracking -------------------- */
+        totalTestcases: {
+            type: Number,
+            default: null,
+        },
 
-        isContestSubmission: {
+        passedTestcases: {
+            type: Number,
+            default: null,
+        },
+
+        /* -------------------- Attempt Tracking -------------------- */
+        attemptNumber: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
+
+        isFirstAccepted: {
             type: Boolean,
             default: false,
-            index: true
-        }
+            index: true,
+        },
+
+        /* -------------------- Testcase Failure Info -------------------- */
+        failedTestcase: {
+            type: {
+                testcaseNumber: Number,
+                reason: {
+                    type: String,
+                    enum: [
+                        "WRONG_ANSWER",
+                        "TIME_LIMIT_EXCEEDED",
+                        "MEMORY_LIMIT_EXCEEDED",
+                        "RUNTIME_ERROR",
+                    ],
+                },
+            },
+            default: null,
+        },
+
+
+        /* -------------------- Plagiarism & Integrity -------------------- */
+        plagiarismStatus: {
+            type: String,
+            enum: ["CLEAN", "SUSPECTED", "CONFIRMED"],
+            default: "CLEAN",
+            index: true,
+        },
+
+        plagiarismScore: {
+            type: Number,
+            default: null, // percentage similarity
+        },
+
+        /* -------------------- Rejudge Support -------------------- */
+        isRejudged: {
+            type: Boolean,
+            default: false,
+        },
+
+        previousVerdict: {
+            type: String,
+            enum: [
+                "PENDING",
+                "ACCEPTED",
+                "WRONG_ANSWER",
+                "TIME_LIMIT_EXCEEDED",
+                "MEMORY_LIMIT_EXCEEDED",
+                "RUNTIME_ERROR",
+                "COMPILATION_ERROR",
+                "PARTIAL_ACCEPTED",
+            ],
+            default: null,
+        },
+
+        /* -------------------- Meta -------------------- */
+        submittedAt: {
+            type: Date,
+            default: Date.now,
+            index: true,
+        },
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+    }
 );
 
-export const Submission = mongoose.model(
-    "Submission",
-    submissionSchema
-);
+/* -------------------- Indexes -------------------- */
+submissionSchema.index({ userId: 1, problemId: 1 });
+submissionSchema.index({ contestId: 1, userId: 1 });
+submissionSchema.index({ problemId: 1, verdict: 1 });
+submissionSchema.index({ submittedAt: -1 });
+
+export const Submission = mongoose.model("Submission", submissionSchema);

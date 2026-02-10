@@ -3,61 +3,59 @@ import mongoose from "mongoose";
 const testCaseSchema = new mongoose.Schema(
     {
         input: {
-            type: String, // JSON string
-            required: true
+            type: String,
+            required: true,
         },
         output: {
-            type: String, // JSON string
-            required: true
-        }
+            type: String,
+            required: true,
+        },
+        isPublic: {
+            type: Boolean,
+            default: false,
+        },
+        weight: {
+            type: Number,
+            default: 1,
+        },
     },
     { _id: false }
 );
 
-
 const functionParamSchema = new mongoose.Schema(
     {
-        name: {
-            type: String,
-            required: true
-        },
-        type: {
-            type: String,
-            required: true // e.g. int, vector<int>, List[int]
-        }
+        name: { type: String, required: true },
+        type: { type: String, required: true },
     },
     { _id: false }
 );
 
 const problemSchema = new mongoose.Schema(
     {
-        title: {
-            type: String,
-            required: true
-        },
+        title: { type: String, required: true },
 
         slug: {
             type: String,
             required: true,
             unique: true,
-            index: true
+            index: true,
         },
 
         descriptionMarkdown: {
             type: String,
-            required: true
+            required: true,
         },
 
         difficulty: {
             type: String,
             enum: ["EASY", "MEDIUM", "HARD"],
             required: true,
-            index: true
+            index: true,
         },
 
         tags: {
             type: [String],
-            index: true
+            default: [],
         },
 
         constraints: String,
@@ -66,14 +64,13 @@ const problemSchema = new mongoose.Schema(
             type: String,
             enum: ["STDIN", "FUNCTION"],
             default: "FUNCTION",
-            index: true
+            index: true,
         },
 
-        /* 🔑 FUNCTION-STYLE METADATA */
         functionSignature: {
             functionName: String,
             returnType: String,
-            parameters: [functionParamSchema]
+            parameters: [functionParamSchema],
         },
 
         publicTestCases: [testCaseSchema],
@@ -81,32 +78,39 @@ const problemSchema = new mongoose.Schema(
 
         ioFormat: {
             input: String,
-            output: String
+            output: String,
         },
 
         timeLimit: {
             type: Number,
-            default: 1000
+            default: 1000,
         },
 
         memoryLimit: {
             type: Number,
-            default: 262144
+            default: 262144,
+        },
+
+        testcaseVersion: {
+            type: Number,
+            default: 1,
         },
 
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
-            index: true
+            index: true,
         },
 
         isActive: {
             type: Boolean,
-            default: true
-        }
+            default: true,
+        },
     },
     { timestamps: true }
 );
+
+problemSchema.index({ tags: 1 });
 
 export const Problem = mongoose.model("Problem", problemSchema);

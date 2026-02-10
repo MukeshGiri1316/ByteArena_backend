@@ -23,13 +23,40 @@ const userProblemStatSchema = new mongoose.Schema(
 
         solved: {
             type: Boolean,
-            default: false
+            default: false,
+            index: true
         },
 
-        firstSolvedAt: Date,
-        lastAttemptAt: Date,
+        firstSolvedAt: {
+            type: Date,
+            default: null
+        },
 
-        bestExecutionTime: Number
+        lastAttemptAt: {
+            type: Date,
+            default: null
+        },
+
+        bestExecutionTime: {
+            type: Number,
+            default: null
+        },
+
+        bestMemoryUsed: {
+            type: Number,
+            default: null
+        },
+
+        lastVerdict: {
+            type: String,
+            default: null
+        },
+
+        firstAcceptedSubmissionId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Submission",
+            default: null
+        }
     },
     { timestamps: true }
 );
