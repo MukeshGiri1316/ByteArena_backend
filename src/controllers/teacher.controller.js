@@ -1,71 +1,22 @@
-import { getProblems } from '../services/problem.service.js';
+import { createProblem, updateProblem, getProblems, deleteProblem } from '../services/problem.service.js';
 import { sendError } from "../utils/error.js";
 import { sendResponse } from "../utils/response.js";
 
-export async function createProblem(req, res) {
+export async function createProblemController(req, res) {
     try {
-        // Ensure authenticated user exists
-        if (!req.user || !req.user.id) {
-            return sendError(res, 401, "Unauthorized access");
-        }
-
         const teacherId = req.user.id;
 
-        const {
-            title,
-            slug,
-            descriptionMarkdown,
-            difficulty,
-            tags,
-            constraints,
-            ioFormat,
-            publicTestCases,
-            hiddenTestCases,
-            timeLimit,
-            memoryLimit,
-            functionSignature // New field for LeetCode-style execution
-        } = req.body;
-
-        // Basic validation
-        if (!title || !slug || !descriptionMarkdown || !difficulty || !functionSignature) {
-            return sendError(res, 400, "Missing required fields");
-        }
-
-        // Validate functionSignature structure
-        const { functionName, returnType, parameters } = functionSignature;
-        if (!functionName || !returnType || !Array.isArray(parameters)) {
-            return sendError(res, 400, "Invalid functionSignature format");
-        }
-
-        // Check for existing problem with same slug
-        const existing = await Problem.findOne({ slug });
-        if (existing) {
-            return sendError(res, 409, "Problem with this slug already exists");
-        }
+        const payload = req.body;
+        payload.createdBy = teacherId;
+        payload.tags = payload.tags.map(t => t.trim().toLowerCase());
 
         // Create problem
-        const problem = await Problem.create({
-            title,
-            slug,
-            descriptionMarkdown,
-            difficulty,
-            tags,
-            constraints,
-            ioFormat,
-            publicTestCases,
-            hiddenTestCases,
-            timeLimit,
-            memoryLimit,
-            functionSignature, // Store it in DB
-            createdBy: teacherId
-        });
+        const problem = await createProblem(payload);
 
-        return sendResponse(res, 201, "Problem created successfully", {
-            problemId: problem._id
-        });
+        return sendResponse(res, 201, "Problem created successfully", { title: problem.title });
 
     } catch (error) {
-        console.error("Create Problem Error:", error);
+        // console.error("Create Problem Error:", error);
 
         // Handle MongoDB duplicate key error (extra safety)
         if (error.code === 11000) {
@@ -78,52 +29,21 @@ export async function createProblem(req, res) {
     }
 }
 
-export async function updateProblem(req, res) {
-    const ALLOWED_FIELDS = [
-        "title",
-        "slug",
-        "descriptionMarkdown",
-        "difficulty",
-        "tags",
-        "constraints",
-        "solutionType",
-        "functionSignature",
-        "publicTestCases",
-        "hiddenTestCases",
-        "ioFormat",
-        "timeLimit",
-        "memoryLimit",
-        "isActive"
-    ];
-
+export async function updateProblemController(req, res) {
     try {
         const { problemId } = req.params;
         const payload = req.body;
 
-        if (!payload || Object.keys(payload).length === 0) {
-            return sendError(res, 400, "No data provided for update");
+        const isExist = await getProblems({
+            _id: problemId,
+            createdBy: req.user.id
+        })
+
+        if (!isExist) {
+            return sendError(res, 404, "Problem not found");
         }
 
-        // 🔐 Build safe update object
-        const updates = {};
-        for (const key of Object.keys(payload)) {
-            if (ALLOWED_FIELDS.includes(key)) {
-                updates[key] = payload[key];
-            }
-        }
-
-        if (Object.keys(updates).length === 0) {
-            return sendError(res, 400, "No valid fields provided for update");
-        }
-
-        const updatedProblem = await Problem.findByIdAndUpdate(
-            problemId,
-            { $set: updates },
-            {
-                new: true,
-                runValidators: true
-            }
-        );
+        const updatedProblem = await updateProblem(problemId, payload);
 
         if (!updatedProblem) {
             return sendError(res, 404, "Problem not found");
@@ -137,14 +57,20 @@ export async function updateProblem(req, res) {
     }
 }
 
-export async function deleteProblem(req, res) {
+export async function deleteProblemController(req, res) {
     try {
         const { problemId } = req.params;
-        const problem = await Problem.findByIdAndDelete(problemId);
 
-        if (!problem) {
+        const isExist = await getProblems({
+            _id: problemId,
+            createdBy: req.user.id
+        })
+
+        if (!isExist) {
             return sendError(res, 404, "Problem not found");
         }
+
+        await deleteProblem(problemId);
 
         return sendResponse(res, 200, "Problem deleted successfully");
     } catch (error) {
@@ -190,7 +116,7 @@ export async function getProblemsByteacherId(req, res) {
 
         // Tags filter (any match)
         if (tags) {
-            const tagArray = tags.split(",").map(t => t.trim());
+            const tagArray = tags.split(",").map(t => t.trim().toLowerCase());
             query.tags = { $in: tagArray };
         }
 

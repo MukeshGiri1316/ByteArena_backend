@@ -1,11 +1,11 @@
 export const ALLOWED_LANGUAGES = {
     cpp: {
         id: 54,
-        name: "C++"
+        name: "cpp"
     },
     python: {
         id: 71,
-        name: "Python"
+        name: "python"
     }
 };
 

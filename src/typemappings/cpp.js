@@ -3,7 +3,7 @@ export const CPP_TYPE_MAP = {
     long: "long long",
     float: "float",
     double: "double",
-    bool: "bool",
+    boolean: "bool",
     string: "string",
 
     "int[]": "vector<int>",

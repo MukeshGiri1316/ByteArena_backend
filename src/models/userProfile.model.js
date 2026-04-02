@@ -81,13 +81,20 @@ const userProfileSchema = new mongoose.Schema(
         },
 
         /* -------------------- Streaks & Activity -------------------- */
-        currentStreak: { type: Number, default: 0, min: 0 },
-        longestStreak: { type: Number, default: 0, min: 0 },
+        streak: {
+            current: { type: Number, default: 0, min: 0 },
+            longest: { type: Number, default: 0, min: 0 },
 
-        lastActiveAt: {
-            type: Date,
-            default: null,
-            index: true,
+            lastSolvedAt: {
+                type: Date,
+                default: null,
+                index: true,
+            },
+
+            warningStartedAt: {
+                type: Date,
+                default: null,
+            }
         },
 
         /* -------------------- Academic Context -------------------- */

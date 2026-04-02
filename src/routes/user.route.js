@@ -1,9 +1,9 @@
 import { Router } from 'express'
-import { getMysubmissions } from '../controllers/user.controller.js'
+import { getUserStatController } from '../controllers/user.controller.js'
 import { authenticate } from '../middlewares/auth.middleware.js'
 
 const router = Router();
 
-router.get('/mysubmissions', authenticate, getMysubmissions);
+router.get('/stats', authenticate, getUserStatController);
 
 export default router;

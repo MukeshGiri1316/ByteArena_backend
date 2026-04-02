@@ -23,8 +23,14 @@ const submissionCodeSchema = new mongoose.Schema(
         },
 
         code: {
+            type: Buffer,
+            required: true,
+        },
+
+        codeHash: {
             type: String,
             required: true,
+            index: true
         },
 
         codeSize: {

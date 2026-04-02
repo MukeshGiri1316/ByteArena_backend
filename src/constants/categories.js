@@ -1,7 +1,8 @@
 export const categories = [
-    "Arrays",
-    "Strings",
+    "Array",
+    "String",
     "Hashing",
+    "Hashmap",
     "Two Pointers",
     "Sliding Window",
     "Stack",
@@ -13,6 +14,7 @@ export const categories = [
     "Sorting",
     "Greedy",
     "Dynamic Programming",
+    "DP",
     "Bit Manipulation",
     "Math",
     "Number Theory",

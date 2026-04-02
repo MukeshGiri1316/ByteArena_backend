@@ -41,16 +41,16 @@ const submissionSchema = new mongoose.Schema(
         verdict: {
             type: String,
             enum: [
-                "PENDING",
-                "ACCEPTED",
-                "WRONG_ANSWER",
-                "TIME_LIMIT_EXCEEDED",
-                "MEMORY_LIMIT_EXCEEDED",
-                "RUNTIME_ERROR",
-                "COMPILATION_ERROR",
-                "PARTIAL_ACCEPTED",
+                "Pending",
+                "Accepted",
+                "Wrong Answer",
+                "Time Limit Exceeded",
+                "Memory Limit Exceeded",
+                "Runtime Error",
+                "Compilation Error",
+                "Partial Accepted",
             ],
-            default: "PENDING",
+            default: "Pending",
             index: true,
         },
 
@@ -70,6 +70,11 @@ const submissionSchema = new mongoose.Schema(
         },
 
         /* -------------------- Testcase Tracking -------------------- */
+        testcaseVersion: {
+            type: Number,
+            required: true,
+        },
+
         totalTestcases: {
             type: Number,
             default: null,
@@ -100,10 +105,10 @@ const submissionSchema = new mongoose.Schema(
                 reason: {
                     type: String,
                     enum: [
-                        "WRONG_ANSWER",
-                        "TIME_LIMIT_EXCEEDED",
-                        "MEMORY_LIMIT_EXCEEDED",
-                        "RUNTIME_ERROR",
+                        "Wrong Answer",
+                        "Time Limit Exceeded",
+                        "Memory Limit Exceeded",
+                        "Runtime Error"
                     ],
                 },
             },
@@ -133,24 +138,18 @@ const submissionSchema = new mongoose.Schema(
         previousVerdict: {
             type: String,
             enum: [
-                "PENDING",
-                "ACCEPTED",
-                "WRONG_ANSWER",
-                "TIME_LIMIT_EXCEEDED",
-                "MEMORY_LIMIT_EXCEEDED",
-                "RUNTIME_ERROR",
-                "COMPILATION_ERROR",
-                "PARTIAL_ACCEPTED",
+                "Pending",
+                "Accepted",
+                "Wrong Answer",
+                "Time Limit Exceeded",
+                "Memory Limit Exceeded",
+                "Runtime Error",
+                "Compilation Error",
+                "Partial Accepted",
             ],
             default: null,
         },
 
-        /* -------------------- Meta -------------------- */
-        submittedAt: {
-            type: Date,
-            default: Date.now,
-            index: true,
-        },
     },
     {
         timestamps: true,

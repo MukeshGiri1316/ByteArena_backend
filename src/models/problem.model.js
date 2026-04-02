@@ -8,7 +8,6 @@ const testCaseSchema = new mongoose.Schema(
         },
         output: {
             type: String,
-            required: true,
         },
         isPublic: {
             type: Boolean,
@@ -67,6 +66,12 @@ const problemSchema = new mongoose.Schema(
             index: true,
         },
 
+        comparisonType: {
+            type: String,
+            enum: ["ORDERED", "UNORDERED"],
+            default: "ORDERED"
+        },
+
         functionSignature: {
             functionName: String,
             returnType: String,
@@ -112,5 +117,6 @@ const problemSchema = new mongoose.Schema(
 );
 
 problemSchema.index({ tags: 1 });
+problemSchema.index({ title: 1 });
 
 export const Problem = mongoose.model("Problem", problemSchema);
