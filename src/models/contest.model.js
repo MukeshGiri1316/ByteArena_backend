@@ -81,7 +81,6 @@ const contestSchema = new mongoose.Schema(
             type: String,
             enum: ["DRAFT", "UPCOMING", "RUNNING", "FINISHED"],
             default: "DRAFT",
-            index: true,
         },
 
         isRated: {
