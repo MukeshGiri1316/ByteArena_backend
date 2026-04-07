@@ -9,6 +9,7 @@ import { saveUserProblemStat, updateUserProfile, getUserProfile } from '../servi
 import { getProblemById } from '../services/problem.service.js';
 import { getHash } from '../utils/generateHash.js';
 import { serveBoilerPlate } from '../services/boilerplate.service.js';
+import { handleSolveStreak } from "../services/streak.service.js";
 
 export async function submitCodeController(req, res) {
     const session = await mongoose.startSession();
@@ -43,7 +44,7 @@ export async function submitCodeController(req, res) {
         /* ================= Check for duplicate submission ================= */
         const hashedCode = getHash(sourceCode);
         const existingResult = await getSubmission({ userId, hashedCode }, session);
-        console.log(existingResult);
+        // console.log(existingResult);
         if (existingResult) {
             return sendResponse(res, 200, existingResult.verdict, {
                 verdict: existingResult.verdict,
@@ -100,6 +101,10 @@ export async function submitCodeController(req, res) {
         };
 
         const submission = await saveSubmission(submissionPayload, session);
+
+        if (isSolved) {
+            await handleSolveStreak(userId, session);
+        }
 
         /* ================= UPDATE USER PROFILE ================= */
 

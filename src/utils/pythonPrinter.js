@@ -1,4 +1,4 @@
-function generatePythonHelper() {
+export function generatePythonHelper() {
     return `
 def __fix_empty(val):
     if isinstance(val, list):
@@ -30,7 +30,6 @@ function generatePythonPrintExpr(type, expr) {
 
 export function generatePythonResultPrint(type, expr) {
     return `
-${generatePythonHelper()}
 print("__RESULT__:" + ${generatePythonPrintExpr(type, expr)})
 `;
 }

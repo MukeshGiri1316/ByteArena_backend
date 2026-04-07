@@ -5,6 +5,7 @@ import { injectCode } from "../utils/codeInjector.js";
 import { generateRunnerCode } from "../utils/generateRunnerCode.js";
 import { outputComparator } from "../utils/outputComparator.js";
 import { decodeBase64 } from "../utils/decodeBase64.js";
+import { generatePythonHelper } from "../utils/pythonPrinter.js";
 
 /**
  * Optimized batch execution version
@@ -32,6 +33,11 @@ export async function runTestCases({
         );
 
         // ✅ 2. Inject into template
+
+        if (language === "python") {
+            template += generatePythonHelper();
+        }
+
         const finalCode = injectCode(template, studentCode, runnerCode);
         // console.log(finalCode)
         // console.log("Final Code:\n", finalCode);

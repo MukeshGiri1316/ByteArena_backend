@@ -5,6 +5,7 @@ import { signToken } from "../utils/jwt.js";
 import { sendResponse } from "../utils/response.js";
 import { sendError } from "../utils/error.js";
 import { createUserProfile } from '../services/user.service.js';
+import { refreshStreak } from "../services/streak.service.js";
 
 export const registerUser = async (req, res) => {
     const session = await mongoose.startSession();
@@ -89,6 +90,8 @@ export const loginUser = async (req, res) => {
             httpOnly: true,
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         })
+
+        await refreshStreak(user._id);
 
         return sendResponse(res, 200, "Login successful");
     } catch (error) {
