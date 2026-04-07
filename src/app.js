@@ -9,7 +9,7 @@ const app = express();
 */
 app.use(express.json({ limit: "50kb" }));
 app.use(cors({
-    origin: ["http://localhost:8080", "https://byte-arena-frontend.vercel.app/"],
+    origin: ["http://localhost:8080", "https://byte-arena-frontend.vercel.app"],
     credentials: true
 }));
 
