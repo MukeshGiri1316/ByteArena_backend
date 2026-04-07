@@ -107,6 +107,10 @@ export async function isMe(req, res) {
 }
 
 export async function logoutUser(req, res) {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+  });
   return sendResponse(res, 200, "Logout successful");
 }
